@@ -26,6 +26,8 @@ jobs:
     name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.runner }}
     strategy:
+      # Let every system finish, so that one run reports all failures.
+      fail-fast: false
       matrix:
         include:
           - target: windows
@@ -34,10 +36,11 @@ jobs:
           - target: macos
             runner: macos-latest
             asset: empirical-reliability-macos-universal
-          # Built on Ubuntu so that the binary links against an older glibc
-          # and therefore also runs on rolling distributions such as Arch.
+          # Built on a fixed Ubuntu LTS so that the binary links against an
+          # older glibc and therefore also runs on rolling distributions such
+          # as Arch.
           - target: linux
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             asset: empirical-reliability-linux-amd64
     steps:
       - uses: actions/checkout@v7
@@ -50,7 +53,7 @@ jobs:
         if: matrix.target == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install --yes gcc libgl1-mesa-dev xorg-dev libxkbcommon-dev
+          sudo apt-get install --yes gcc libgl1-mesa-dev xorg-dev libxkbcommon-dev libwayland-dev
 
       - name: Test
         run: go test ./...
@@ -117,7 +120,7 @@ jobs:
           ./$APP_NAME-linux-amd64
           \`\`\`
 
-          Program korzysta z bibliotek X11 i OpenGL, które są obecne w każdym środowisku graficznym. W Arch Linuksie dostarczają je pakiety \`libglvnd libx11 libxcursor libxrandr libxinerama libxi libxxf86vm\`.
+          Program korzysta z bibliotek X11, Wayland i OpenGL, które są obecne w każdym środowisku graficznym. W Arch Linuksie dostarczają je pakiety \`libglvnd wayland libxkbcommon libx11 libxcursor libxrandr libxinerama libxi libxxf86vm\`.
 
           Zbudowano z commita $GITHUB_SHA.
           EOF
