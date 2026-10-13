@@ -94,7 +94,7 @@ func (v *resultsView) saveCSV() {
 		v.host.reportError(writeResults(target, v.current.Result))
 	}, v.host.window)
 	save.SetFileName(resultsFileName)
-	save.Show()
+	readableFileDialog(save, v.host.window).Show()
 }
 
 func writeResults(target io.WriteCloser, result *reliability.Result) error {

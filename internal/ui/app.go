@@ -9,7 +9,6 @@ import (
 // Run opens the main window and blocks until it is closed.
 func Run() {
 	application := app.NewWithID(appID)
-	application.Settings().SetTheme(newLightTheme())
 
 	window := application.NewWindow(windowTitle)
 	window.SetContent(newMainWindow(window).content())

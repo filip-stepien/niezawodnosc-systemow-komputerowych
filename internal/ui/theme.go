@@ -7,9 +7,9 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-// lightTheme forces the light variant of the default theme, so that the charts
-// drawn on a white background match the rest of the window regardless of the
-// system settings.
+// lightTheme forces the light variant of the default theme. It is only used
+// in tests, so that golden screenshots stay the same regardless of the
+// system theme the tests happen to run under.
 type lightTheme struct {
 	fyne.Theme
 }

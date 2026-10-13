@@ -25,4 +25,13 @@ const (
 
 	resultsFileName    = "results.csv"
 	chartFileExtension = ".png"
+
+	// File dialogs default to a size barely fitting one row. They are
+	// instead resized to this share of the window they are opened in.
+	fileDialogWidthShare  float32 = 0.8
+	fileDialogHeightShare float32 = 0.8
+	// fileDialogMinWidth/Height keep the dialog usable even if the window
+	// itself has been shrunk very small.
+	fileDialogMinWidth  float32 = 640
+	fileDialogMinHeight float32 = 420
 )

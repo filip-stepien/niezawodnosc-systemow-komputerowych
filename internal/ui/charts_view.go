@@ -77,7 +77,7 @@ func (v *chartsView) saveCharts() {
 		v.host.reportError(errNothingToSave)
 		return
 	}
-	dialog.ShowFolderOpen(func(folder fyne.ListableURI, err error) {
+	open := dialog.NewFolderOpen(func(folder fyne.ListableURI, err error) {
 		if err != nil {
 			v.host.reportError(err)
 			return
@@ -91,6 +91,7 @@ func (v *chartsView) saveCharts() {
 		}
 		v.host.inform(dialogSavedTitle, fmt.Sprintf(dialogChartsSavedFormat, folder.Path()))
 	}, v.host.window)
+	readableFileDialog(open, v.host.window).Show()
 }
 
 func (v *chartsView) saveTo(folder string) error {

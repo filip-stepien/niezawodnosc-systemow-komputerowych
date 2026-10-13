@@ -3,6 +3,7 @@ package ui
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
@@ -64,6 +65,19 @@ func primaryButton(label string, action func()) *widget.Button {
 // a form grid.
 func labelled(label string, field fyne.CanvasObject) []fyne.CanvasObject {
 	return []fyne.CanvasObject{widget.NewLabel(label), field}
+}
+
+// readableFileDialog resizes a file dialog to a share of the window it opens
+// in (its default is barely big enough for one row) and shows file names as
+// a list instead of Fyne's default grid, which truncates them in narrow
+// tiles.
+func readableFileDialog(d *dialog.FileDialog, window fyne.Window) *dialog.FileDialog {
+	available := window.Canvas().Size()
+	width := max(available.Width*fileDialogWidthShare, fileDialogMinWidth)
+	height := max(available.Height*fileDialogHeightShare, fileDialogMinHeight)
+	d.Resize(fyne.NewSize(width, height))
+	d.SetView(dialog.ListView)
+	return d
 }
 
 func formGrid(rows ...[]fyne.CanvasObject) *fyne.Container {
