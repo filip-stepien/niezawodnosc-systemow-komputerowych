@@ -16,3 +16,4 @@
 *.run.xml
 *.synctex.gz
 *.toc
+.direnv
