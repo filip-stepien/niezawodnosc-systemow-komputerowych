@@ -1,0 +1,129 @@
+\section{Algorytm działania programu}
+
+\subsection{Ogólny przebieg}
+
+Program przyjmuje dane na trzy sposoby: losuje próbę z~zadanego rozkładu, wczytuje
+listę pojedynczych czasów uszkodzeń albo wczytuje tabelę uszkodzeń $(t_j, m(t_j))$.
+Niezależnie od sposobu dane sprowadza się do tej samej postaci -- liczności próby
+$n(0)$ i~liczb uszkodzeń w~kolejnych przedziałach -- po czym wyznacza się wskaźniki
+i~prezentuje wyniki (rys.~\ref{fig:flow}).
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      >=Latex, font=\small,
+      block/.style={rectangle, draw, align=center, minimum height=10mm, text width=46mm, inner sep=3pt},
+      data/.style={trapezium, trapezium left angle=78, trapezium right angle=102, draw,
+                   align=center, minimum height=10mm, text width=30mm, inner sep=3pt,
+                   trapezium stretches body},
+      decision/.style={diamond, aspect=2.4, draw, align=center, inner sep=1pt},
+      terminal/.style={rectangle, rounded corners=4.5mm, draw, minimum height=9mm, minimum width=26mm},
+    ]
+    \node[terminal] (start) at (0, 0) {Start};
+    \node[decision] (mode) at (0, -1.9) {Sposób\\wprowadzenia\\danych};
+
+    \node[data, text width=36mm] (random) at (-4.8, -4.4) {rozkład, parametry,\\$n$, $\Delta t$, ziarno};
+    \node[data, text width=26mm] (times) at (0, -4.4) {czasy $t_k$,\\$n(0)$, $\Delta t$};
+    \node[data, text width=26mm] (table) at (4.8, -4.4) {$n(0)$, tabela\\$t_j$, $m(t_j)$};
+
+    \node[block, text width=38mm] (sample) at (-4.8, -6.3) {Losowanie $n$ czasów\\z~rozkładu};
+    \node[block, text width=32mm] (group) at (-2.4, -8.3) {Grupowanie czasów\\w~przedziały\\o~długości $\Delta t$};
+
+    \node[decision] (valid) at (0, -10.9) {Dane\\poprawne?};
+    \node[block, text width=32mm] (error) at (4.8, -10.9) {Komunikat o~błędzie};
+
+    \node[block, text width=60mm] (compute) at (0, -13.3)
+      {Wyznaczenie $F^*$, $R^*$, $f^*$, $\lambda^*$\\dla kolejnych chwil $t_i$};
+    \node[block, text width=60mm] (mean) at (0, -14.9) {Wyznaczenie $E^*T$};
+    \node[data, text width=52mm] (output) at (0, -16.6)
+      {tabela wyników, wykresy,\\zapis do plików CSV i~PNG};
+
+    \draw[->] (start) -- (mode);
+    \draw[->] (mode.west) -| node[pos=0.25, above] {próba losowa} (random.north);
+    \draw[->] (mode.south) -- node[right] {lista czasów} (times.north);
+    \draw[->] (mode.east) -| node[pos=0.25, above] {tabela} (table.north);
+
+    \draw[->] (random) -- (sample);
+    \draw[->] (sample.south) |- (group.west);
+    \draw[->] (times.south) |- (group.east);
+    \draw (group.south) |- (0, -9.5);
+    \draw (table.south) |- (0, -9.5);
+    \draw[->] (0, -9.5) -- (valid.north);
+
+    \draw[->] (valid.east) -- node[above] {nie} (error.west);
+    \draw[->] (valid.south) -- node[right] {tak} (compute.north);
+    \draw[->] (compute) -- (mean);
+    \draw[->] (mean) -- (output);
+
+    \draw[->] (error.east) -- (7.4, -10.9) |- (7.4, -1.2) -| (mode.north east);
+    \draw[->] (output.west) -- (-7.4, -16.6) |- node[pos=0.1, right, align=left] {kolejne\\dane} (-7.4, -1.2) -| (mode.north west);
+  \end{tikzpicture}
+  \caption{Schemat działania programu}
+  \label{fig:flow}
+\end{figure}
+
+\subsection{Wyznaczanie wskaźników}
+\label{sec:alg-indicators}
+
+Dane wejściowe: liczność próby $n(0)$ oraz ciąg par $(t_j, m(t_j))$, $j = 1, \dots, k$.
+
+\begin{enumerate}
+  \item \textbf{Sprawdzenie danych.} Liczność $n(0)$ musi być dodatnia, ciąg nie może
+    być pusty, chwile $t_j$ muszą być dodatnie i~rosnące, liczby $m(t_j)$ nieujemne,
+    a~łączna liczba uszkodzeń nie może przekroczyć $n(0)$. Błąd jest zgłaszany wraz
+    z~numerem pozycji, na której wystąpił.
+  \item \textbf{Inicjalizacja.} $t_0 \leftarrow 0$, liczba elementów zdatnych
+    $z \leftarrow n(0)$.
+  \item \textbf{Dla każdego $i = 1, \dots, k$:}
+    \begin{enumerate}
+      \item $\Delta t_i \leftarrow t_i - t_{i-1}$;
+      \item $f^*(t_i) \leftarrow m(t_i) / (n(0)\,\Delta t_i)$;
+      \item jeżeli $z > 0$, to $\lambda^*(t_i) \leftarrow m(t_i) / (z\,\Delta t_i)$,
+        w~przeciwnym razie $\lambda^*(t_i)$ jest nieokreślona;
+      \item $z \leftarrow z - m(t_i)$, czyli $n(t_i) = z$;
+      \item $F^*(t_i) \leftarrow (n(0) - z) / n(0)$, \quad $R^*(t_i) \leftarrow z / n(0)$.
+    \end{enumerate}
+  \item \textbf{Wartość oczekiwana z~$R^*(t)$:}
+    $\sum_{i=1}^{k} \tfrac{1}{2}\left[R^*(t_{i-1}) + R^*(t_i)\right]\Delta t_i$, gdzie $R^*(t_0) = 1$.
+  \item \textbf{Wartość oczekiwana ze wzoru (5-15):} jeżeli po zakończeniu obserwacji
+    pozostały elementy zdatne ($z > 0$), wartość jest nieokreślona; w~przeciwnym razie
+    jest to średnia pojedynczych czasów uszkodzeń, a~gdy nie są one znane --
+    $\tfrac{1}{n(0)}\sum_{j} t_j\,m(t_j)$.
+\end{enumerate}
+
+Złożoność obliczeniowa jest liniowa względem liczby przedziałów $k$.
+
+\subsection{Grupowanie czasów uszkodzeń}
+
+Dane wejściowe: czasy $t^{(1)}, \dots, t^{(n)}$, liczność próby $n(0) \geq n$ oraz
+długość przedziału $\Delta t$ (podana lub dobierana automatycznie, p.~\ref{sec:grouping}).
+
+\begin{enumerate}
+  \item Sprawdzenie danych: lista nie może być pusta, wszystkie czasy muszą być
+    dodatnie, $\Delta t > 0$, a~liczba przedziałów nie może przekroczyć 10\,000.
+  \item $k \leftarrow \lceil t_{\max} / \Delta t \rceil$; utworzenie $k$ przedziałów
+    o~końcach $t_i = i\,\Delta t$ i~licznikach $m(t_i) = 0$.
+  \item Dla każdego czasu $t^{(l)}$: $i \leftarrow \lceil t^{(l)} / \Delta t \rceil$,
+    $m(t_i) \leftarrow m(t_i) + 1$.
+  \item Wyznaczenie wskaźników jak w~p.~\ref{sec:alg-indicators}. Jeżeli $n(0) > n$,
+    pozostałe $n(0) - n$ elementów traktuje się jako zdatne do końca obserwacji.
+\end{enumerate}
+
+Przy wyznaczaniu numeru przedziału od ilorazu $t / \Delta t$ odejmuje się małą
+tolerancję ($10^{-9}$). Dzięki temu czas leżący dokładnie na granicy przedziału
+trafia do przedziału niższego także wtedy, gdy błąd zaokrąglenia liczb
+zmiennoprzecinkowych podnosi iloraz nieznacznie ponad liczbę całkowitą
+(np. $0{,}3 / 0{,}1$).
+
+\subsection{Losowanie próby}
+
+\begin{enumerate}
+  \item Sprawdzenie parametrów rozkładu (wszystkie muszą być dodatnie) i~liczności
+    próby ($1 \leq n \leq 1\,000\,000$).
+  \item Zainicjowanie generatora liczb pseudolosowych ziarnem podanym przez
+    użytkownika; gdy pole jest puste, ziarnem jest bieżący czas systemowy. Użyte
+    ziarno jest wyświetlane w~podsumowaniu, aby próbę dało się odtworzyć.
+  \item Wylosowanie $n$ czasów zgodnie z~p.~\ref{sec:distributions}.
+  \item Pogrupowanie czasów i~wyznaczenie wskaźników; $n(0) = n$.
+  \item Zapamiętanie rozkładu teoretycznego, aby nanieść jego przebieg na wykresy.
+\end{enumerate}
