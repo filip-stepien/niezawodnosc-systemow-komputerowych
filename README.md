@@ -12,11 +12,10 @@ Autorzy: Filip Stępień, Bartłomiej Karkoszka, Rafał Grot.
 Program działa w przeglądarce pod adresem
 **https://filip-stepien.github.io/niezawodnosc-systemow-komputerowych/**.
 
-Można go też uruchomić bez dostępu do internetu: to jeden plik HTML, który nie wymaga
-instalacji. Pobierz `empirical-reliability.html` z [najnowszego wydania](https://github.com/filip-stepien/niezawodnosc-systemow-komputerowych/releases/latest)
-i otwórz go w przeglądarce.
+Strona aktualizuje się automatycznie po każdej zmianie na gałęzi `main`.
 
-Strona i wydanie aktualizują się automatycznie po każdej zmianie na gałęzi `main`.
+Program to jeden plik HTML, więc działa też bez dostępu do internetu: wystarczy zapisać
+stronę w przeglądarce (Ctrl+S) i otworzyć zapisany plik.
 
 ## Budowanie
 
