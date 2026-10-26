@@ -30,8 +30,3 @@ xattr -d com.apple.quarantine empirical-reliability-macos-universal
 chmod +x empirical-reliability-linux-amd64
 ./empirical-reliability-linux-amd64
 ```
-
-## Sprawozdanie
-
-**[Sprawozdanie z zadania laboratoryjnego](report/report.pdf)** - opis teoretyczny,
-algorytm działania, kod programu, wyniki testowania i instrukcja obsługi.
