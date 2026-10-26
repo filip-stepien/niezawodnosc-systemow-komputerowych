@@ -1,7 +1,7 @@
 name: Release
 
-# Every push to main is tested and built on all three systems, then published
-# as a GitHub release tagged v1.0.<run number>.
+# Every push to main is built into a single HTML file and published as a
+# GitHub release tagged v1.0.<run number>.
 on:
   push:
     branches: [main]
@@ -19,108 +19,39 @@ defaults:
     shell: bash
 
 env:
-  APP_NAME: empirical-reliability
+  APP_FILE: empirical-reliability.html
 
 jobs:
-  build:
-    name: Build (${{ matrix.target }})
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      # Let every system finish, so that one run reports all failures.
-      fail-fast: false
-      matrix:
-        include:
-          - target: windows
-            runner: windows-latest
-            asset: empirical-reliability-windows-amd64.exe
-          - target: macos
-            runner: macos-latest
-            asset: empirical-reliability-macos-universal
-          # Built on a fixed Ubuntu LTS so that the binary links against an
-          # older glibc and therefore also runs on rolling distributions such
-          # as Arch.
-          - target: linux
-            runner: ubuntu-24.04
-            asset: empirical-reliability-linux-amd64
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-
-      - name: Install the libraries Fyne needs
-        if: matrix.target == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes gcc libgl1-mesa-dev xorg-dev libxkbcommon-dev libwayland-dev
-
-      - name: Test
-        run: go test ./...
-
-      - name: Build for Windows
-        if: matrix.target == 'windows'
-        run: go build -ldflags "-H=windowsgui -s -w" -o "${{ matrix.asset }}" .
-
-      - name: Build for Linux
-        if: matrix.target == 'linux'
-        run: go build -ldflags "-s -w" -o "${{ matrix.asset }}" .
-
-      # One file that runs on both Apple Silicon and Intel Macs.
-      - name: Build for macOS
-        if: matrix.target == 'macos'
-        run: |
-          GOARCH=arm64 CGO_ENABLED=1 go build -ldflags "-s -w" -o "$APP_NAME-arm64" .
-          GOARCH=amd64 CGO_ENABLED=1 go build -ldflags "-s -w" -o "$APP_NAME-amd64" .
-          lipo -create -output "${{ matrix.asset }}" "$APP_NAME-arm64" "$APP_NAME-amd64"
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.target }}
-          path: ${{ matrix.asset }}
-          if-no-files-found: error
-
   release:
-    name: Publish release
-    needs: build
+    name: Build and publish
     runs-on: ubuntu-latest
     env:
       TAG: v1.0.${{ github.run_number }}
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
         with:
-          path: dist
-          merge-multiple: true
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: |
+          npm run build
+          cp dist/index.html "$APP_FILE"
 
       - name: Write release notes
         run: |
           cat > notes.md <<EOF
-          Program wyznaczający empiryczne wskaźniki niezawodności. Wystarczy pobrać jeden plik dla swojego systemu i go uruchomić — instalacja nie jest potrzebna.
+          Program wyznaczający empiryczne wskaźniki niezawodności.
 
-          | System | Plik |
-          |---|---|
-          | Windows 10/11 (64 bity) | \`$APP_NAME-windows-amd64.exe\` |
-          | macOS (Apple Silicon i Intel) | \`$APP_NAME-macos-universal\` |
-          | Linux (64 bity), w tym Arch Linux | \`$APP_NAME-linux-amd64\` |
-
-          ### macOS
-
-          Pobrany plik trzeba oznaczyć jako wykonywalny i zdjąć z niego blokadę nakładaną na pliki z internetu:
-
-          \`\`\`
-          chmod +x $APP_NAME-macos-universal
-          xattr -d com.apple.quarantine $APP_NAME-macos-universal
-          ./$APP_NAME-macos-universal
-          \`\`\`
-
-          ### Linux
-
-          \`\`\`
-          chmod +x $APP_NAME-linux-amd64
-          ./$APP_NAME-linux-amd64
-          \`\`\`
-
-          Program korzysta z bibliotek X11, Wayland i OpenGL, które są obecne w każdym środowisku graficznym. W Arch Linuksie dostarczają je pakiety \`libglvnd wayland libxkbcommon libx11 libxcursor libxrandr libxinerama libxi libxxf86vm\`.
+          Pobierz plik \`$APP_FILE\` i otwórz go w przeglądarce. Program działa bez instalacji i bez dostępu do internetu.
 
           Zbudowano z commita $GITHUB_SHA.
           EOF
@@ -129,7 +60,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$TAG" dist/* \
+          gh release create "$TAG" "$APP_FILE" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "Empiryczne wskaźniki niezawodności $TAG" \

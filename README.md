@@ -1,6 +1,6 @@
 # Empiryczne wskaźniki niezawodności
 
-Program okienkowy wyznaczający empiryczne wskaźniki niezawodności F\*(t), R\*(t), f\*(t), λ\*(t)
+Program wyznaczający empiryczne wskaźniki niezawodności F\*(t), R\*(t), f\*(t), λ\*(t)
 oraz E\*T na podstawie próby losowej lub ręcznie wprowadzonych danych.
 
 Zadanie laboratoryjne z przedmiotu *Niezawodność systemów komputerowych*
@@ -9,24 +9,21 @@ Autorzy: Filip Stępień, Bartłomiej Karkoszka, Rafał Grot.
 
 ## Uruchomienie
 
-Program to jeden plik i nie wymaga instalacji. Pobierz plik dla swojego systemu
-z [najnowszego wydania](https://github.com/filip-stepien/niezawodnosc-systemow-komputerowych/releases/latest).
+Program to jeden plik HTML i nie wymaga instalacji ani dostępu do internetu. Pobierz
+`empirical-reliability.html` z [najnowszego wydania](https://github.com/filip-stepien/niezawodnosc-systemow-komputerowych/releases/latest)
+i otwórz go w przeglądarce.
 
-### Windows
+## Budowanie
 
-Uruchom `empirical-reliability-windows-amd64.exe`.
-
-### macOS
-
-```
-chmod +x empirical-reliability-macos-universal
-xattr -d com.apple.quarantine empirical-reliability-macos-universal
-./empirical-reliability-macos-universal
-```
-
-### Linux
+Potrzebny jest Node.js 24 (albo `nix develop`).
 
 ```
-chmod +x empirical-reliability-linux-amd64
-./empirical-reliability-linux-amd64
+npm install
+npm run dev     # podgląd na żywo podczas pracy
+npm run build   # gotowy plik: dist/index.html
 ```
+
+## Sprawozdanie
+
+**[Sprawozdanie z zadania laboratoryjnego](report/report.pdf)** - opis teoretyczny,
+algorytm działania, kod programu, wyniki testowania i instrukcja obsługi.

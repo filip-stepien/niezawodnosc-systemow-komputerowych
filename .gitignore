@@ -1,6 +1,23 @@
-# Application build output
-/empirical-reliability
-/empirical-reliability.exe
+# Dependencies and build output
+node_modules
+dist
+dist-ssr
+*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor and system files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.sw?
+
+# Nix dev shell
+.direnv
 
 # LaTeX build files (report/report.pdf is kept in the repository)
 *.aux
@@ -10,10 +27,11 @@
 *.fdb_latexmk
 *.fls
 *.lof
-*.log
 *.lot
 *.out
 *.run.xml
 *.synctex.gz
 *.toc
-.direnv
+
+# Task materials (not redistributed)
+materials/
